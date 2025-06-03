@@ -409,6 +409,59 @@
             color: #333;
         }
 
+        .import-info {
+            background: #e8f4fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #1565c0;
+            text-align: left;
+        }
+
+        .import-info h5 {
+            color: #1565c0;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .import-info ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .import-info li {
+            margin-bottom: 5px;
+        }
+
+        .import-options {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #856404;
+            text-align: left;
+        }
+
+        .import-options h5 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .import-options label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .import-options input[type="radio"] {
+            margin-right: 8px;
+        }
+
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -716,39 +769,46 @@
                     <input type="date" id="data-custos" required>
                 </div>
                 
-                <button type="submit" class="btn">💸 Registrar Custos</button>
+                <button type="submit" class="btn">💼 Registrar Custos</button>
                 <button type="button" class="btn btn-back" onclick="showScreen('main')">🔙 Voltar</button>
             </form>
         </div>
 
-        <!-- Tela REL1 - Relatório -->
+        <!-- Tela REL1 - Relatório Geral -->
         <div id="rel1-screen" class="screen">
             <div class="header">
                 <h1>📊 Relatório Geral</h1>
-                <p>Análise completa por período</p>
+                <p>Visualizar relatórios detalhados por período</p>
             </div>
             
-            <form id="relatorio-form">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="form-group">
-                        <label for="data-inicio">Data Início:</label>
-                        <input type="date" id="data-inicio" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="data-fim">Data Fim:</label>
-                        <input type="date" id="data-fim" required>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn">📈 Gerar Relatório</button>
-                        <button type="button" class="btn" onclick="exportarRelatorio()">📄 Exportar PDF</button>
-                <button type="button" class="btn btn-back" onclick="showScreen('main')">🔙 Voltar</button>
-            </form>
+            <div class="form-group">
+                <label for="data-inicio">Data Início:</label>
+                <input type="date" id="data-inicio" onchange="gerarRelatorio()">
+            </div>
             
-            <div id="relatorio-resultado" style="display: none;">
-                <div class="report-summary" id="resumo-relatorio">
-                    <!-- Resumo será gerado dinamicamente -->
+            <div class="form-group">
+                <label for="data-fim">Data Fim:</label>
+                <input type="date" id="data-fim" onchange="gerarRelatorio()">
+            </div>
+            
+            <div id="relatorio-content">
+                <div class="report-summary">
+                    <div class="summary-card">
+                        <h4>💰 Total Vendas</h4>
+                        <div class="value" id="total-vendas-relatorio">R$ 0,00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>📦 Total Entradas</h4>
+                        <div class="value" id="total-entradas-relatorio">R$ 0,00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>👥 Total Custos Pessoal</h4>
+                        <div class="value" id="total-custos-relatorio">R$ 0,00</div>
+                    </div>
+                    <div class="summary-card">
+                        <h4>📈 Lucro Bruto</h4>
+                        <div class="value" id="lucro-bruto-relatorio">R$ 0,00</div>
+                    </div>
                 </div>
                 
                 <table class="report-table" id="tabela-relatorio">
@@ -757,19 +817,19 @@
                             <th>Data</th>
                             <th>Tipo</th>
                             <th>Descrição</th>
-                            <th>Quantidade</th>
-                            <th>Valor Unit.</th>
-                            <th>Total</th>
+                            <th>Valor</th>
                         </tr>
                     </thead>
-                    <tbody id="corpo-relatorio">
-                        <!-- Dados serão inseridos dinamicamente -->
+                    <tbody id="tbody-relatorio">
                     </tbody>
                 </table>
             </div>
+            
+            <button type="button" class="btn" onclick="exportarPDF()">📄 Exportar PDF</button>
+            <button type="button" class="btn btn-back" onclick="showScreen('main')">🔙 Voltar</button>
         </div>
 
-        <!-- Tela Configurações -->
+        <!-- Tela de Configurações -->
         <div id="config-screen" class="screen">
             <div class="header">
                 <h1>⚙️ Configurações</h1>
@@ -777,57 +837,90 @@
             </div>
             
             <div class="data-management">
-                <h4>💾 Gerenciamento de Dados</h4>
+                <h4>📊 Gerenciamento de Dados</h4>
                 
                 <div class="data-info">
-                    <strong>Dados Armazenados:</strong><br>
-                    Entradas: <span id="count-entradas">0</span> registros<br>
-                    Vendas: <span id="count-vendas">0</span> registros<br>
-                    Custos: <span id="count-custos">0</span> registros
+                    <strong>Status dos Dados:</strong><br>
+                    <span id="status-dados">Carregando...</span>
                 </div>
                 
-                <div style="margin: 20px 0;">
-                    <button class="btn" onclick="exportarDados()">📤 Exportar Dados</button>
-                    <button class="btn" onclick="importarDados()">📥 Importar Dados</button>
-                    <input type="file" id="arquivo-importacao" accept=".json" style="display: none;" onchange="processarImportacao()">
+                <button type="button" class="btn" onclick="exportarDados()">💾 Exportar Dados</button>
+                
+                <div class="import-info">
+                    <h5>📥 Importar Dados</h5>
+                    <p><strong>Importante:</strong> A importação agora adiciona aos dados existentes sem apagar o que já foi registrado.</p>
+                    <ul>
+                        <li>O arquivo deve estar no formato JSON</li>
+                        <li>Os dados importados serão <strong>adicionados</strong> aos registros atuais</li>
+                        <li>Não haverá perda dos dados já existentes no sistema</li>
+                        <li>Em caso de conflito de datas, você pode escolher como proceder</li>
+                    </ul>
                 </div>
                 
-                <div style="margin: 20px 0;">
-                    <button class="btn btn-danger" onclick="limparDados()">🗑️ Limpar Todos os Dados</button>
+                <div class="import-options" id="import-options" style="display: none;">
+                    <h5>⚠️ Dados Duplicados Encontrados</h5>
+                    <p>Foram encontrados registros com datas que já existem no sistema. Como deseja proceder?</p>
+                    <label>
+                        <input type="radio" name="merge-option" value="add" checked> 
+                        Adicionar aos registros existentes (somar valores)
+                    </label>
+                    <label>
+                        <input type="radio" name="merge-option" value="replace"> 
+                        Substituir apenas os registros conflitantes
+                    </label>
+                    <label>
+                        <input type="radio" name="merge-option" value="keep"> 
+                        Manter dados existentes (ignorar conflitos)
+                    </label>
                 </div>
                 
-                <button type="button" class="btn btn-back" onclick="showScreen('main')">🔙 Voltar</button>
+                <input type="file" id="file-input" accept=".json" style="display: none;" onchange="importarDados()">
+                <button type="button" class="btn" onclick="document.getElementById('file-input').click()">📥 Importar Dados</button>
+                
+                <button type="button" class="btn btn-danger" onclick="limparDados()">🗑️ Limpar Todos os Dados</button>
             </div>
+            
+            <button type="button" class="btn btn-back" onclick="showScreen('main')">🔙 Voltar</button>
         </div>
+
+        <!-- Mensagem de Sucesso -->
+        <div id="success-message" class="success-message" style="display: none;"></div>
     </div>
 
     <script>
-        // Estruturas de dados
-        let entradas = JSON.parse(localStorage.getItem('pizzaria_entradas') || '[]');
-        let vendas = JSON.parse(localStorage.getItem('pizzaria_vendas') || '[]');
-        let custos = JSON.parse(localStorage.getItem('pizzaria_custos') || '[]');
+        // Variáveis globais para armazenar dados
+        let dadosEntradas = [];
+        let dadosVendas = [];
+        let dadosCustos = [];
+        let pendingImportData = null;
 
-        // Inicialização
+        // Inicializar sistema
         document.addEventListener('DOMContentLoaded', function() {
+            carregarDados();
+            atualizarStatusDados();
+            
             // Definir data atual como padrão
             const hoje = new Date().toISOString().split('T')[0];
             document.getElementById('data-entrada').value = hoje;
             document.getElementById('data-venda').value = hoje;
             document.getElementById('data-custos').value = hoje;
-            document.getElementById('data-inicio').value = hoje;
-            document.getElementById('data-fim').value = hoje;
-            
-            atualizarContadores();
-            calcularTotalVendas();
-            calcularTotalCustos();
         });
 
-        // Navegação entre telas
+        // Função para mostrar telas
         function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(screen => {
-                screen.classList.remove('active');
-            });
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
             document.getElementById(screenId + '-screen').classList.add('active');
+        }
+
+        // Função para mostrar mensagem de sucesso
+        function showSuccessMessage(message) {
+            const successDiv = document.getElementById('success-message');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
         }
 
         // REC1 - Entrada de Itens
@@ -840,73 +933,94 @@
                 quantidade: parseFloat(document.getElementById('quantidade').value),
                 valorUnitario: parseFloat(document.getElementById('valor-unitario').value),
                 data: document.getElementById('data-entrada').value,
-                total: parseFloat(document.getElementById('quantidade').value) * parseFloat(document.getElementById('valor-unitario').value)
+                valorTotal: parseFloat(document.getElementById('quantidade').value) * parseFloat(document.getElementById('valor-unitario').value)
             };
             
-            entradas.push(entrada);
-            localStorage.setItem('pizzaria_entradas', JSON.stringify(entradas));
+            dadosEntradas.push(entrada);
+            salvarDados();
             
-            mostrarMensagemSucesso('Entrada registrada com sucesso!');
+            showSuccessMessage('✅ Entrada registrada com sucesso!');
             this.reset();
-            document.getElementById('data-entrada').value = new Date().toISOString().split('T')[0];
-            atualizarContadores();
+            
+            // Redefinir data atual
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data-entrada').value = hoje;
         });
 
         // FAT1 - Vendas
-        const precos = {
-            'pizza-pequena': 70.00,
-            'pizza-media': 95.00,
-            'pizza-grande': 105.00,
-            'pizza-gigante': 125.00,
-            'esfirra-doce': 10.00,
-            'esfirra-salgada': 10.00
-        };
-
         function calcularTotalVendas() {
-            let total = 0;
+            const produtos = [
+                { id: 'pizza-pequena', preco: 70.00 },
+                { id: 'pizza-media', preco: 95.00 },
+                { id: 'pizza-grande', preco: 105.00 },
+                { id: 'pizza-gigante', preco: 125.00 },
+                { id: 'esfirra-doce', preco: 10.00 },
+                { id: 'esfirra-salgada', preco: 10.00 }
+            ];
             
-            Object.keys(precos).forEach(produto => {
-                const quantidade = parseInt(document.getElementById(produto).value) || 0;
-                total += quantidade * precos[produto];
+            let total = 0;
+            produtos.forEach(produto => {
+                const qtd = parseInt(document.getElementById(produto.id).value) || 0;
+                total += qtd * produto.preco;
             });
             
             document.getElementById('total-vendas-display').innerHTML = 
-                `<strong>Total de Vendas: R$ ${total.toFixed(2)}</strong>`;
+                `<strong>Total de Vendas: R$ ${total.toFixed(2).replace('.', ',')}</strong>`;
         }
 
         document.getElementById('venda-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const venda = {
-                id: Date.now(),
-                data: document.getElementById('data-venda').value,
-                produtos: {},
-                total: 0
-            };
+            const produtos = [
+                { id: 'pizza-pequena', nome: 'Pizza Pequena', preco: 70.00 },
+                { id: 'pizza-media', nome: 'Pizza Média', preco: 95.00 },
+                { id: 'pizza-grande', nome: 'Pizza Grande', preco: 105.00 },
+                { id: 'pizza-gigante', nome: 'Pizza Gigante', preco: 125.00 },
+                { id: 'esfirra-doce', nome: 'Esfirra Doce', preco: 10.00 },
+                { id: 'esfirra-salgada', nome: 'Esfirra Salgada', preco: 10.00 }
+            ];
             
-            Object.keys(precos).forEach(produto => {
-                const quantidade = parseInt(document.getElementById(produto).value) || 0;
-                if (quantidade > 0) {
-                    venda.produtos[produto] = {
-                        quantidade: quantidade,
-                        preco: precos[produto],
-                        subtotal: quantidade * precos[produto]
-                    };
-                    venda.total += quantidade * precos[produto];
+            let vendaTotal = 0;
+            let itensVendidos = [];
+            
+            produtos.forEach(produto => {
+                const qtd = parseInt(document.getElementById(produto.id).value) || 0;
+                if (qtd > 0) {
+                    const valorItem = qtd * produto.preco;
+                    vendaTotal += valorItem;
+                    itensVendidos.push({
+                        nome: produto.nome,
+                        quantidade: qtd,
+                        valorUnitario: produto.preco,
+                        valorTotal: valorItem
+                    });
                 }
             });
             
-            if (venda.total > 0) {
-                vendas.push(venda);
-                localStorage.setItem('pizzaria_vendas', JSON.stringify(vendas));
+            if (vendaTotal > 0) {
+                const venda = {
+                    id: Date.now(),
+                    data: document.getElementById('data-venda').value,
+                    itens: itensVendidos,
+                    valorTotal: vendaTotal
+                };
                 
-                mostrarMensagemSucesso(`Vendas registradas! Total: R$ ${venda.total.toFixed(2)}`);
-                this.reset();
-                document.getElementById('data-venda').value = new Date().toISOString().split('T')[0];
+                dadosVendas.push(venda);
+                salvarDados();
+                
+                showSuccessMessage('✅ Vendas registradas com sucesso!');
+                
+                // Limpar formulário
+                produtos.forEach(produto => {
+                    document.getElementById(produto.id).value = 0;
+                });
                 calcularTotalVendas();
-                atualizarContadores();
+                
+                // Redefinir data atual
+                const hoje = new Date().toISOString().split('T')[0];
+                document.getElementById('data-venda').value = hoje;
             } else {
-                alert('Adicione pelo menos um produto para registrar a venda!');
+                alert('⚠️ Adicione pelo menos um produto para registrar a venda!');
             }
         });
 
@@ -919,11 +1033,10 @@
             if (checkbox.checked) {
                 input.disabled = false;
                 card.classList.add('active');
-                input.value = 7; // Valor padrão
             } else {
                 input.disabled = true;
-                card.classList.remove('active');
                 input.value = 0;
+                card.classList.remove('active');
             }
             
             calcularTotalCustos();
@@ -931,37 +1044,37 @@
 
         function calcularTotalCustos() {
             let totalMotoboys = 0;
-            let totalAuxiliares = 0;
             
-            // Calcular custos dos motoboys
+            // Calcular salários dos motoboys
             for (let i = 1; i <= 5; i++) {
                 const checkbox = document.getElementById(`motoboy-${i}-ativo`);
                 const entregas = parseInt(document.getElementById(`motoboy-${i}-entregas`).value) || 0;
-                const salaryDiv = document.getElementById(`motoboy-${i}-salary`);
+                let salario = 0;
                 
                 if (checkbox.checked) {
-                    let salario = 70; // Base
-                    if (entregas > 7) {
-                        salario += (entregas - 7) * 10;
+                    if (entregas <= 7) {
+                        salario = 70.00;
+                    } else {
+                        salario = 70.00 + ((entregas - 7) * 10.00);
                     }
-                    totalMotoboys += salario;
-                    salaryDiv.textContent = `R$ ${salario.toFixed(2)}`;
-                } else {
-                    salaryDiv.textContent = 'R$ 0,00';
                 }
+                
+                totalMotoboys += salario;
+                document.getElementById(`motoboy-${i}-salary`).textContent = 
+                    `R$ ${salario.toFixed(2).replace('.', ',')}`;
             }
             
-            // Calcular custos dos auxiliares
+            // Calcular custos auxiliares
             const auxiliares = parseInt(document.getElementById('auxiliares-trabalhando').value) || 0;
-            totalAuxiliares = auxiliares * 80;
+            const totalAuxiliares = auxiliares * 80.00;
             
             const totalGeral = totalMotoboys + totalAuxiliares;
             
             document.getElementById('total-custos-display').innerHTML = `
-                <div>Total Motoboys: R$ ${totalMotoboys.toFixed(2)}</div>
-                <div>Total Auxiliares: R$ ${totalAuxiliares.toFixed(2)}</div>
+                <div>Total Motoboys: R$ ${totalMotoboys.toFixed(2).replace('.', ',')}</div>
+                <div>Total Auxiliares: R$ ${totalAuxiliares.toFixed(2).replace('.', ',')}</div>
                 <div style="border-top: 2px solid white; padding-top: 10px; margin-top: 10px;">
-                    <strong>Total Custos Pessoal: R$ ${totalGeral.toFixed(2)}</strong>
+                    <strong>Total Custos Pessoal: R$ ${totalGeral.toFixed(2).replace('.', ',')}</strong>
                 </div>
             `;
         }
@@ -969,331 +1082,441 @@
         document.getElementById('custos-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const custo = {
-                id: Date.now(),
-                data: document.getElementById('data-custos').value,
-                motoboys: [],
-                auxiliares: parseInt(document.getElementById('auxiliares-trabalhando').value) || 0,
-                totalMotoboys: 0,
-                totalAuxiliares: 0,
-                total: 0
-            };
-            
-            // Processar motoboys
+            // Coletar dados dos motoboys
+            const motoboys = [];
             for (let i = 1; i <= 5; i++) {
                 const checkbox = document.getElementById(`motoboy-${i}-ativo`);
-                const entregas = parseInt(document.getElementById(`motoboy-${i}-entregas`).value) || 0;
-                
                 if (checkbox.checked) {
-                    let salario = 70;
-                    if (entregas > 7) {
-                        salario += (entregas - 7) * 10;
+                    const entregas = parseInt(document.getElementById(`motoboy-${i}-entregas`).value) || 0;
+                    let salario = 0;
+                    
+                    if (entregas <= 7) {
+                        salario = 70.00;
+                    } else {
+                        salario = 70.00 + ((entregas - 7) * 10.00);
                     }
                     
-                    custo.motoboys.push({
+                    motoboys.push({
                         numero: i,
                         entregas: entregas,
                         salario: salario
                     });
-                    
-                    custo.totalMotoboys += salario;
                 }
             }
             
-            custo.totalAuxiliares = custo.auxiliares * 80;
-            custo.total = custo.totalMotoboys + custo.totalAuxiliares;
+            const auxiliares = parseInt(document.getElementById('auxiliares-trabalhando').value) || 0;
+            const totalAuxiliares = auxiliares * 80.00;
+            const totalMotoboys = motoboys.reduce((sum, motoboy) => sum + motoboy.salario, 0);
             
-            custos.push(custo);
-            localStorage.setItem('pizzaria_custos', JSON.stringify(custos));
+            const custo = {
+                id: Date.now(),
+                data: document.getElementById('data-custos').value,
+                motoboys: motoboys,
+                auxiliares: {
+                    quantidade: auxiliares,
+                    valorTotal: totalAuxiliares
+                },
+                totalMotoboys: totalMotoboys,
+                totalAuxiliares: totalAuxiliares,
+                valorTotal: totalMotoboys + totalAuxiliares
+            };
             
-            mostrarMensagemSucesso(`Custos registrados! Total: R$ ${custo.total.toFixed(2)}`);
-            this.reset();
-            document.getElementById('data-custos').value = new Date().toISOString().split('T')[0];
+            dadosCustos.push(custo);
+            salvarDados();
             
-            // Reset dos motoboys
+            showSuccessMessage('✅ Custos registrados com sucesso!');
+            
+            // Limpar formulário
             for (let i = 1; i <= 5; i++) {
                 document.getElementById(`motoboy-${i}-ativo`).checked = false;
-                document.getElementById(`motoboy-${i}-entregas`).disabled = true;
                 document.getElementById(`motoboy-${i}-entregas`).value = 0;
                 document.getElementById(`motoboy-${i}`).classList.remove('active');
-                document.getElementById(`motoboy-${i}-salary`).textContent = 'R$ 0,00';
+                toggleMotoboy(i);
             }
-            
+            document.getElementById('auxiliares-trabalhando').value = 0;
             calcularTotalCustos();
-            atualizarContadores();
+            
+            // Redefinir data atual
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('data-custos').value = hoje;
         });
 
         // REL1 - Relatórios
-        document.getElementById('relatorio-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function gerarRelatorio() {
+            const dataInicio = document.getElementById('data-inicio').value;
+            const dataFim = document.getElementById('data-fim').value;
+            
+            if (!dataInicio || !dataFim) return;
+            
+            // Filtrar dados por período
+            const entradasFiltradas = dadosEntradas.filter(entrada => 
+                entrada.data >= dataInicio && entrada.data <= dataFim
+            );
+            
+            const vendasFiltradas = dadosVendas.filter(venda => 
+                venda.data >= dataInicio && venda.data <= dataFim
+            );
+            
+            const custosFiltrados = dadosCustos.filter(custo => 
+                custo.data >= dataInicio && custo.data <= dataFim
+            );
+            
+            // Calcular totais
+            const totalEntradas = entradasFiltradas.reduce((sum, entrada) => sum + entrada.valorTotal, 0);
+            const totalVendas = vendasFiltradas.reduce((sum, venda) => sum + venda.valorTotal, 0);
+            const totalCustos = custosFiltrados.reduce((sum, custo) => sum + custo.valorTotal, 0);
+            const lucroBruto = totalVendas - totalEntradas - totalCustos;
+            
+            // Atualizar resumos
+            document.getElementById('total-vendas-relatorio').textContent = 
+                `R$ ${totalVendas.toFixed(2).replace('.', ',')}`;
+            document.getElementById('total-entradas-relatorio').textContent = 
+                `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`;
+            document.getElementById('total-custos-relatorio').textContent = 
+                `R$ ${totalCustos.toFixed(2).replace('.', ',')}`;
+            document.getElementById('lucro-bruto-relatorio').textContent = 
+                `R$ ${lucroBruto.toFixed(2).replace('.', ',')}`;
+            
+            // Gerar tabela
+            const tbody = document.getElementById('tbody-relatorio');
+            tbody.innerHTML = '';
+            
+            // Adicionar entradas
+            entradasFiltradas.forEach(entrada => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${formatarData(entrada.data)}</td>
+                    <td class="entrada">📦 Entrada</td>
+                    <td>${entrada.item} (${entrada.quantidade}x)</td>
+                    <td class="entrada">R$ ${entrada.valorTotal.toFixed(2).replace('.', ',')}</td>
+                `;
+            });
+            
+            // Adicionar vendas
+            vendasFiltradas.forEach(venda => {
+                const row = tbody.insertRow();
+                const itensTexto = venda.itens.map(item => `${item.nome} (${item.quantidade}x)`).join(', ');
+                row.innerHTML = `
+                    <td>${formatarData(venda.data)}</td>
+                    <td class="saida">💰 Venda</td>
+                    <td>${itensTexto}</td>
+                    <td class="saida">R$ ${venda.valorTotal.toFixed(2).replace('.', ',')}</td>
+                `;
+            });
+            
+            // Adicionar custos
+            custosFiltrados.forEach(custo => {
+                const row = tbody.insertRow();
+                const motoboyTexto = custo.motoboys.length > 0 ? 
+                    `${custo.motoboys.length} motoboy(s)` : '';
+                const auxiliarTexto = custo.auxiliares.quantidade > 0 ? 
+                    `${custo.auxiliares.quantidade} auxiliar(es)` : '';
+                const descricaoTexto = [motoboyTexto, auxiliarTexto].filter(t => t).join(', ');
+                
+                row.innerHTML = `
+                    <td>${formatarData(custo.data)}</td>
+                    <td class="funcionario">👥 Pessoal</td>
+                    <td>${descricaoTexto}</td>
+                    <td class="funcionario">R$ ${custo.valorTotal.toFixed(2).replace('.', ',')}</td>
+                `;
+            });
+        }
+
+        function formatarData(data) {
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
             
             const dataInicio = document.getElementById('data-inicio').value;
             const dataFim = document.getElementById('data-fim').value;
             
-            gerarRelatorio(dataInicio, dataFim);
-            document.getElementById('relatorio-resultado').style.display = 'block';
-        });
-
-        function gerarRelatorio(dataInicio, dataFim) {
-            const resumo = {
-                totalEntradas: 0,
-                totalVendas: 0,
-                totalCustos: 0,
-                lucro: 0,
-                itensEntrada: 0,
-                registrosVenda: 0,
-                registrosCusto: 0
-            };
-            
-            const dados = [];
-            
-            // Processar entradas
-            entradas.forEach(entrada => {
-                if (entrada.data >= dataInicio && entrada.data <= dataFim) {
-                    resumo.totalEntradas += entrada.total;
-                    resumo.itensEntrada++;
-                    
-                    dados.push({
-                        data: entrada.data,
-                        tipo: 'Entrada',
-                        descricao: entrada.item,
-                        quantidade: entrada.quantidade,
-                        valorUnit: entrada.valorUnitario,
-                        total: entrada.total,
-                        classe: 'entrada'
-                    });
-                }
-            });
-            
-            // Processar vendas
-            vendas.forEach(venda => {
-                if (venda.data >= dataInicio && venda.data <= dataFim) {
-                    resumo.totalVendas += venda.total;
-                    resumo.registrosVenda++;
-                    
-                    Object.keys(venda.produtos).forEach(produto => {
-                        const produtoData = venda.produtos[produto];
-                        dados.push({
-                            data: venda.data,
-                            tipo: 'Venda',
-                            descricao: produto.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                            quantidade: produtoData.quantidade,
-                            valorUnit: produtoData.preco,
-                            total: produtoData.subtotal,
-                            classe: 'saida'
-                        });
-                    });
-                }
-            });
-            
-            // Processar custos
-            custos.forEach(custo => {
-                if (custo.data >= dataInicio && custo.data <= dataFim) {
-                    resumo.totalCustos += custo.total;
-                    resumo.registrosCusto++;
-                    
-                    // Motoboys
-                    custo.motoboys.forEach(motoboy => {
-                        dados.push({
-                            data: custo.data,
-                            tipo: 'Custo',
-                            descricao: `Motoboy ${motoboy.numero} (${motoboy.entregas} entregas)`,
-                            quantidade: 1,
-                            valorUnit: motoboy.salario,
-                            total: motoboy.salario,
-                            classe: 'funcionario'
-                        });
-                    });
-                    
-                    // Auxiliares
-                    if (custo.auxiliares > 0) {
-                        dados.push({
-                            data: custo.data,
-                            tipo: 'Custo',
-                            descricao: `Auxiliares de Cozinha (${custo.auxiliares})`,
-                            quantidade: custo.auxiliares,
-                            valorUnit: 80,
-                            total: custo.totalAuxiliares,
-                            classe: 'funcionario'
-                        });
-                    }
-                }
-            });
-            
-            resumo.lucro = resumo.totalVendas - resumo.totalEntradas - resumo.totalCustos;
-            
-            // Ordenar dados por data
-            dados.sort((a, b) => new Date(a.data) - new Date(b.data));
-            
-            // Exibir resumo
-            document.getElementById('resumo-relatorio').innerHTML = `
-                <div class="summary-card">
-                    <h4>💰 Total Vendas</h4>
-                    <div class="value">R$ ${resumo.totalVendas.toFixed(2)}</div>
-                </div>
-                <div class="summary-card">
-                    <h4>📦 Total Entradas</h4>
-                    <div class="value">R$ ${resumo.totalEntradas.toFixed(2)}</div>
-                </div>
-                <div class="summary-card">
-                    <h4>👥 Total Custos</h4>
-                    <div class="value">R$ ${resumo.totalCustos.toFixed(2)}</div>
-                </div>
-                <div class="summary-card">
-                    <h4>📈 Lucro Líquido</h4>
-                    <div class="value" style="color: ${resumo.lucro >= 0 ? '#27ae60' : '#e74c3c'}">
-                        R$ ${resumo.lucro.toFixed(2)}
-                    </div>
-                </div>
-            `;
-            
-            // Exibir tabela
-            const corpo = document.getElementById('corpo-relatorio');
-            corpo.innerHTML = '';
-            
-            dados.forEach(item => {
-                const row = corpo.insertRow();
-                row.innerHTML = `
-                    <td>${new Date(item.data).toLocaleDateString('pt-BR')}</td>
-                    <td class="${item.classe}">${item.tipo}</td>
-                    <td>${item.descricao}</td>
-                    <td>${item.quantidade}</td>
-                    <td>R$ ${item.valorUnit.toFixed(2)}</td>
-                    <td class="${item.classe}">R$ ${item.total.toFixed(2)}</td>
-                `;
-            });
-            
-            // Salvar dados do relatório para exportação
-            window.dadosRelatorio = { resumo, dados, dataInicio, dataFim };
-        }
-
-        function exportarRelatorio() {
-            if (!window.dadosRelatorio) {
-                alert('Gere um relatório primeiro!');
+            if (!dataInicio || !dataFim) {
+                alert('⚠️ Selecione o período do relatório!');
                 return;
             }
             
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
             // Título
             doc.setFontSize(20);
-            doc.text('Relatório Pizzaria', 20, 20);
+            doc.text('Relatório Geral - Pizzaria', 20, 20);
             
             doc.setFontSize(12);
-            doc.text(`Período: ${new Date(window.dadosRelatorio.dataInicio).toLocaleDateString('pt-BR')} a ${new Date(window.dadosRelatorio.dataFim).toLocaleDateString('pt-BR')}`, 20, 35);
+            doc.text(`Período: ${formatarData(dataInicio)} a ${formatarData(dataFim)}`, 20, 35);
             
             // Resumo
-            const resumo = window.dadosRelatorio.resumo;
-            doc.text(`Total Vendas: R$ ${resumo.totalVendas.toFixed(2)}`, 20, 50);
-            doc.text(`Total Entradas: R$ ${resumo.totalEntradas.toFixed(2)}`, 20, 60);
-            doc.text(`Total Custos: R$ ${resumo.totalCustos.toFixed(2)}`, 20, 70);
-            doc.text(`Lucro Líquido: R$ ${resumo.lucro.toFixed(2)}`, 20, 80);
+            const totalVendas = document.getElementById('total-vendas-relatorio').textContent;
+            const totalEntradas = document.getElementById('total-entradas-relatorio').textContent;
+            const totalCustos = document.getElementById('total-custos-relatorio').textContent;
+            const lucroBruto = document.getElementById('lucro-bruto-relatorio').textContent;
             
-            // Tabela
-            const colunas = ['Data', 'Tipo', 'Descrição', 'Qtd', 'Valor Unit.', 'Total'];
-            const linhas = window.dadosRelatorio.dados.map(item => [
-                new Date(item.data).toLocaleDateString('pt-BR'),
-                item.tipo,
-                item.descricao,
-                item.quantidade.toString(),
-                `R$ ${item.valorUnit.toFixed(2)}`,
-                `R$ ${item.total.toFixed(2)}`
-            ]);
+            doc.text(`Total Vendas: ${totalVendas}`, 20, 50);
+            doc.text(`Total Entradas: ${totalEntradas}`, 20, 65);
+            doc.text(`Total Custos Pessoal: ${totalCustos}`, 20, 80);
+            doc.text(`Lucro Bruto: ${lucroBruto}`, 20, 95);
             
-            doc.autoTable({
-                head: [colunas],
-                body: linhas,
-                startY: 90,
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [102, 126, 234] }
+            // Tabela detalhada
+            const tableData = [];
+            const rows = document.querySelectorAll('#tbody-relatorio tr');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                tableData.push([
+                    cells[0].textContent,
+                    cells[1].textContent,
+                    cells[2].textContent,
+                    cells[3].textContent
+                ]);
             });
             
-            doc.save(`relatorio-pizzaria-${window.dadosRelatorio.dataInicio}-${window.dadosRelatorio.dataFim}.pdf`);
+            doc.autoTable({
+                head: [['Data', 'Tipo', 'Descrição', 'Valor']],
+                body: tableData,
+                startY: 110,
+                styles: { fontSize: 8 }
+            });
+            
+            doc.save(`relatorio-pizzaria-${dataInicio}-${dataFim}.pdf`);
         }
 
-        // Configurações
-        function atualizarContadores() {
-            document.getElementById('count-entradas').textContent = entradas.length;
-            document.getElementById('count-vendas').textContent = vendas.length;
-            document.getElementById('count-custos').textContent = custos.length;
+        // Funções de gerenciamento de dados
+        function salvarDados() {
+            const dados = {
+                entradas: dadosEntradas,
+                vendas: dadosVendas,
+                custos: dadosCustos,
+                versao: '1.0',
+                ultimaAtualizacao: new Date().toISOString()
+            };
+            
+            localStorage.setItem('sistemaPizzaria', JSON.stringify(dados));
+            atualizarStatusDados();
+        }
+
+        function carregarDados() {
+            const dadosSalvos = localStorage.getItem('sistemaPizzaria');
+            if (dadosSalvos) {
+                try {
+                    const dados = JSON.parse(dadosSalvos);
+                    dadosEntradas = dados.entradas || [];
+                    dadosVendas = dados.vendas || [];
+                    dadosCustos = dados.custos || [];
+                } catch (error) {
+                    console.error('Erro ao carregar dados:', error);
+                    dadosEntradas = [];
+                    dadosVendas = [];
+                    dadosCustos = [];
+                }
+            }
+        }
+
+        function atualizarStatusDados() {
+            const statusElement = document.getElementById('status-dados');
+            const totalRegistros = dadosEntradas.length + dadosVendas.length + dadosCustos.length;
+            
+            if (totalRegistros === 0) {
+                statusElement.innerHTML = '📊 Nenhum dado registrado ainda';
+            } else {
+                statusElement.innerHTML = `
+                    📊 Total de ${totalRegistros} registros salvos<br>
+                    📦 ${dadosEntradas.length} entradas | 💰 ${dadosVendas.length} vendas | 👥 ${dadosCustos.length} custos
+                `;
+            }
         }
 
         function exportarDados() {
             const dados = {
-                entradas: entradas,
-                vendas: vendas,
-                custos: custos,
-                exportDate: new Date().toISOString()
+                entradas: dadosEntradas,
+                vendas: dadosVendas,
+                custos: dadosCustos,
+                versao: '1.0',
+                dataExportacao: new Date().toISOString()
             };
             
-            const blob = new Blob([JSON.stringify(dados, null, 2)], {type: 'application/json'});
+            const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
+            
             const a = document.createElement('a');
             a.href = url;
-            a.download = `pizzaria-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.download = `backup-pizzaria-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
+            
             URL.revokeObjectURL(url);
+            showSuccessMessage('✅ Dados exportados com sucesso!');
         }
 
         function importarDados() {
-            document.getElementById('arquivo-importacao').click();
-        }
-
-        function processarImportacao() {
-            const arquivo = document.getElementById('arquivo-importacao').files[0];
-            if (!arquivo) return;
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const dados = JSON.parse(e.target.result);
+                    const dadosImportados = JSON.parse(e.target.result);
                     
-                    if (dados.entradas) entradas = dados.entradas;
-                    if (dados.vendas) vendas = dados.vendas;
-                    if (dados.custos) custos = dados.custos;
+                    // Validar estrutura dos dados
+                    if (!dadosImportados.entradas || !dadosImportados.vendas || !dadosImportados.custos) {
+                        throw new Error('Arquivo inválido: estrutura de dados não reconhecida');
+                    }
                     
-                    localStorage.setItem('pizzaria_entradas', JSON.stringify(entradas));
-                    localStorage.setItem('pizzaria_vendas', JSON.stringify(vendas));
-                    localStorage.setItem('pizzaria_custos', JSON.stringify(custos));
+                    // Verificar se há conflitos de data
+                    const datasExistentes = new Set([
+                        ...dadosEntradas.map(e => e.data),
+                        ...dadosVendas.map(v => v.data),
+                        ...dadosCustos.map(c => c.data)
+                    ]);
                     
-                    atualizarContadores();
-                    mostrarMensagemSucesso('Dados importados com sucesso!');
+                    const datasImportadas = new Set([
+                        ...dadosImportados.entradas.map(e => e.data),
+                        ...dadosImportados.vendas.map(v => v.data),
+                        ...dadosImportados.custos.map(c => c.data)
+                    ]);
+                    
+                    const datasConflitantes = [...datasImportadas].filter(data => datasExistentes.has(data));
+                    
+                    if (datasConflitantes.length > 0) {
+                        // Mostrar opções de merge
+                        document.getElementById('import-options').style.display = 'block';
+                        pendingImportData = dadosImportados;
+                        
+                        // Adicionar evento para processar a escolha
+                        const processButton = document.createElement('button');
+                        processButton.textContent = '✅ Confirmar Importação';
+                        processButton.className = 'btn';
+                        processButton.onclick = function() {
+                            processarImportacao();
+                            document.getElementById('import-options').style.display = 'none';
+                            processButton.remove();
+                        };
+                        document.getElementById('import-options').appendChild(processButton);
+                        
+                        showSuccessMessage(`⚠️ Encontrados ${datasConflitantes.length} registros com datas conflitantes. Escolha como proceder acima.`);
+                    } else {
+                        // Não há conflitos, importar diretamente
+                        pendingImportData = dadosImportados;
+                        processarImportacao();
+                    }
+                    
                 } catch (error) {
-                    alert('Erro ao importar dados. Verifique se o arquivo está correto.');
+                    alert('❌ Erro ao importar dados: ' + error.message);
                 }
             };
-            reader.readAsText(arquivo);
+            
+            reader.readAsText(file);
+            fileInput.value = ''; // Limpar input
+        }
+
+        function processarImportacao() {
+            if (!pendingImportData) return;
+            
+            const mergeOption = document.querySelector('input[name="merge-option"]:checked')?.value || 'add';
+            
+            // Processar entradas
+            pendingImportData.entradas.forEach(novaEntrada => {
+                const existeData = dadosEntradas.some(e => e.data === novaEntrada.data);
+                
+                if (!existeData || mergeOption === 'add') {
+                    // Garantir ID único
+                    novaEntrada.id = Date.now() + Math.random();
+                    dadosEntradas.push(novaEntrada);
+                } else if (mergeOption === 'replace') {
+                    // Remover entradas da mesma data e adicionar as novas
+                    dadosEntradas = dadosEntradas.filter(e => e.data !== novaEntrada.data);
+                    novaEntrada.id = Date.now() + Math.random();
+                    dadosEntradas.push(novaEntrada);
+                }
+                // Se for 'keep', não faz nada (mantém dados existentes)
+            });
+            
+            // Processar vendas
+            pendingImportData.vendas.forEach(novaVenda => {
+                const existeData = dadosVendas.some(v => v.data === novaVenda.data);
+                
+                if (!existeData || mergeOption === 'add') {
+                    novaVenda.id = Date.now() + Math.random();
+                    dadosVendas.push(novaVenda);
+                } else if (mergeOption === 'replace') {
+                    dadosVendas = dadosVendas.filter(v => v.data !== novaVenda.data);
+                    novaVenda.id = Date.now() + Math.random();
+                    dadosVendas.push(novaVenda);
+                }
+            });
+            
+            // Processar custos
+            pendingImportData.custos.forEach(novoCusto => {
+                const existeData = dadosCustos.some(c => c.data === novoCusto.data);
+                
+                if (!existeData || mergeOption === 'add') {
+                    novoCusto.id = Date.now() + Math.random();
+                    dadosCustos.push(novoCusto);
+                } else if (mergeOption === 'replace') {
+                    dadosCustos = dadosCustos.filter(c => c.data !== novoCusto.data);
+                    novoCusto.id = Date.now() + Math.random();
+                    dadosCustos.push(novoCusto);
+                }
+            });
+            
+            // Salvar dados atualizados
+            salvarDados();
+            
+            const totalImportados = pendingImportData.entradas.length + 
+                                  pendingImportData.vendas.length + 
+                                  pendingImportData.custos.length;
+            
+            showSuccessMessage(`✅ ${totalImportados} registros importados com sucesso!`);
+            
+            // Limpar dados pendentes
+            pendingImportData = null;
         }
 
         function limparDados() {
-            if (confirm('Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita!')) {
-                if (confirm('CONFIRMAÇÃO FINAL: Todos os dados serão perdidos permanentemente!')) {
-                    entradas = [];
-                    vendas = [];
-                    custos = [];
-                    
-                    localStorage.removeItem('pizzaria_entradas');
-                    localStorage.removeItem('pizzaria_vendas');
-                    localStorage.removeItem('pizzaria_custos');
-                    
-                    atualizarContadores();
-                    mostrarMensagemSucesso('Todos os dados foram limpos!');
+            if (confirm('⚠️ Tem certeza que deseja limpar TODOS os dados? Esta ação não pode ser desfeita!')) {
+                if (confirm('🚨 CONFIRMAÇÃO FINAL: Todos os dados serão perdidos permanentemente!')) {
+                    dadosEntradas = [];
+                    dadosVendas = [];
+                    dadosCustos = [];
+                    localStorage.removeItem('sistemaPizzaria');
+                    atualizarStatusDados();
+                    showSuccessMessage('🗑️ Todos os dados foram removidos!');
                 }
             }
         }
 
-        function mostrarMensagemSucesso(mensagem) {
-            const div = document.createElement('div');
-            div.className = 'success-message';
-            div.textContent = mensagem;
-            
-            const container = document.querySelector('.container');
-            container.insertBefore(div, container.firstChild);
-            
-            setTimeout(() => {
-                div.remove();
-            }, 3000);
+        // Event listeners adicionais
+        document.getElementById('data-inicio').addEventListener('change', gerarRelatorio);
+        document.getElementById('data-fim').addEventListener('change', gerarRelatorio);
+
+        // Adicionar event listeners para cálculos automáticos
+        document.getElementById('quantidade').addEventListener('input', function() {
+            const quantidade = parseFloat(this.value) || 0;
+            const valorUnitario = parseFloat(document.getElementById('valor-unitario').value) || 0;
+            const total = quantidade * valorUnitario;
+            // Você pode adicionar um campo para mostrar o total se desejar
+        });
+
+        document.getElementById('valor-unitario').addEventListener('input', function() {
+            const quantidade = parseFloat(document.getElementById('quantidade').value) || 0;
+            const valorUnitario = parseFloat(this.value) || 0;
+            const total = quantidade * valorUnitario;
+            // Você pode adicionar um campo para mostrar o total se desejar
+        });
+
+        // Event listeners para cálculos automáticos de vendas
+        const produtosVenda = ['pizza-pequena', 'pizza-media', 'pizza-grande', 'pizza-gigante', 'esfirra-doce', 'esfirra-salgada'];
+        produtosVenda.forEach(produto => {
+            document.getElementById(produto).addEventListener('input', calcularTotalVendas);
+        });
+
+        // Event listeners para cálculos automáticos de custos
+        document.getElementById('auxiliares-trabalhando').addEventListener('input', calcularTotalCustos);
+
+        for (let i = 1; i <= 5; i++) {
+            document.getElementById(`motoboy-${i}-entregas`).addEventListener('input', calcularTotalCustos);
         }
     </script>
 </body>
